@@ -1,0 +1,7 @@
+[workspace]
+members = ["crates/lupine"]
+resolver = "2"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"

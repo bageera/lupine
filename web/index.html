@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>lupine</title>
+  </head>
+  <body>
+    <input id="file" type="file" accept=".wav,audio/wav" />
+    <button id="btn">play</button>
+    <button id="pause">pause</button>
+    <input id="seek" type="range" min="0" max="0" step="0.01" />
+    <span id="clock">0.0</span>
+    <span id="err" style="color: #b00"></span>
+    <script type="module">
+      import { LupinePlayer } from "./player.js";
+
+      let player = null;
+      const $ = (id) => document.getElementById(id);
+      const err = (m) => ($("err").textContent = m);
+
+      $("file").onchange = async () => {
+        try {
+          err("");
+          player?.close();
+          player = null;
+          player = await LupinePlayer.create();
+          player.onpos = (t) => ($("clock").textContent = t.toFixed(1));
+          player.onend = () => ($("btn").textContent = "play again");
+          await player.load($("file").files[0]);
+          player.onready = (d) => ($("seek").max = d);
+        } catch (e) {
+          err(e.message);
+        }
+      };
+      $("btn").onclick = () => player?.play();
+      $("pause").onclick = () => player?.pause();
+      $("seek").onchange = () => player?.seek(+$("seek").value);
+    </script>
+  </body>
+</html>
