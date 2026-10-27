@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup target add wasm32-unknown-unknown
+      - run: cargo test --locked
+      - name: build wasm
+        run: |
+          cargo build --locked --target wasm32-unknown-unknown --release
+          cp target/wasm32-unknown-unknown/release/lupine.wasm web/
+      - name: node e2e
+        run: |
+          node scripts/e2e.mjs
+          node scripts/e2e-formats.mjs
+
+  # advisory at 0.x: never blocks, surfaces breaking API changes vs the last tag
+  semver:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: rustup target add wasm32-unknown-unknown
+      - name: cargo-semver-checks
+        run: |
+          cargo install cargo-semver-checks --locked --quiet || \
+            cargo install cargo-semver-checks --locked --quiet # retry once on flaky install
+          BASE=$(git describe --abbrev=0 --tags --always 2>/dev/null || echo "")
+          if [ -n "$BASE" ]; then
+            cargo semver-checks --package lupine --baseline-rev "$BASE"
+          else
+            echo "no baseline tag yet; first release defines it"
+          fi
