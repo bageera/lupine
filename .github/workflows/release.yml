@@ -28,7 +28,7 @@ jobs:
           mkdir -p dist/lupine-$VERSION
           cp web/demux.js web/worklet.js web/player.js web/index.html web/lupine.wasm dist/lupine-$VERSION/
           tar -czf lupine-$VERSION.tar.gz -C dist lupine-$VERSION
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: lupine-*.tar.gz
           generate_release_notes: true
